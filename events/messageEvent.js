@@ -1,15 +1,16 @@
 const { downloadMedia } = require("../utils/downloadMediaUtil.js");
 const { convertMp4ToGif } = require("../utils/convertMp4ToGifUtil.js");
 const { PermissionsBitField } = require('discord.js');
+const fs = require('fs');
 
 const MAX_BITRATE = 2176000;  // bits per second
 const COOLDOWN_DURATION = 5000;  // 5 seconds cooldown per user
-const lastMessageTtimestamps = new Map();
+const lastMessageTimestamps = new Map();
 
 async function handleMessage(message) {
   if (message.author.bot) return;
 
-  // check bot permissions
+  // Check bot permissions
   const botPermissions = message.channel.permissionsFor(message.guild?.members.me);
   if (!botPermissions.has([PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.AttachFiles, PermissionsBitField.Flags.EmbedLinks])) {
     console.error('Missing SEND_MESSAGES, READ_MESSAGE_HISTORY, ATTACH_FILES OR EMBED_LINKS permission in this channel.');
@@ -19,16 +20,16 @@ async function handleMessage(message) {
   if (message.content.includes("x.com") || message.content.includes("twitter.com")) {
     console.log("A link has been sent!");
 
-    // clean up the cooldown map
+    // Clean up the cooldown map
     const now = Date.now();
-    for (const [key, timestamp] of lastMessageTtimestamps.entries()) {
+    for (const [key, timestamp] of lastMessageTimestamps.entries()) {
       if (now - timestamp > COOLDOWN_DURATION) {
-        lastMessageTtimestamps.delete(key);
+        lastMessageTimestamps.delete(key);
       }
     }
 
-    // check for cooldown
-    const lastTimestamp = lastMessageTtimestamps.get(message.author.id);
+    // Check for cooldown
+    const lastTimestamp = lastMessageTimestamps.get(message.author.id);
     if (lastTimestamp && now - lastTimestamp < COOLDOWN_DURATION) {
       const remainingTime = ((COOLDOWN_DURATION - (now - lastTimestamp)) / 1000).toFixed(1);
       console.log("User on cooldown. Message ignored.");
@@ -36,10 +37,11 @@ async function handleMessage(message) {
       return;
     }
 
-    // set the cooldown timestamp
-    lastMessageTtimestamps.set(message.author.id, now);
+    // Set the cooldown timestamp
+    lastMessageTimestamps.set(message.author.id, now);
 
-    const tweetURL = message.content.split(' ').find(url => (url.includes('x.com') && url.includes('/status/')) || (url.includes('twitter.com') && url.includes('/status/')));
+    const normalizedContent = message.content.replace(/\s+/g, ' ');
+    const tweetURL = normalizedContent.split(' ').find(url => (url.includes('x.com') && url.includes('/status/')) || (url.includes('twitter.com') && url.includes('/status/')));
     if (!tweetURL) {
       console.log("No tweet found for this link.");
       return;
@@ -51,14 +53,17 @@ async function handleMessage(message) {
     try {
       const response = await fetch(`http://localhost:3000/${tweetID}`);
       const tweetData = await response.json();
-      const mediaUrls = [];
-      const gifUrls = [];
-      const mediaEntities = tweetData.data.tweetResult.result.legacy.extended_entities?.media || [];
-      const quotedStatus = tweetData.data.tweetResult.result.quoted_status_result;
+
+      // Safely accessing extended_entities
+      const mediaEntities = tweetData.data?.tweetResult?.result?.legacy?.extended_entities?.media || [];
+      const quotedStatus = tweetData.data?.tweetResult?.result?.quoted_status_result;
 
       if (mediaEntities.length > 0 || quotedStatus) {
         message.channel.sendTyping();
       }
+
+      const mediaUrls = [];
+      const gifUrls = [];
 
       for (const media of mediaEntities) {
         if (media.type === "photo") {
@@ -91,7 +96,7 @@ async function handleMessage(message) {
         if (quotedTweetText) {
           textWithoutLink = quotedTweetText.split("http")[0].trim();
         }
-        const quotedMediaEntities = quotedStatus.result.legacy.extended_entities?.media || [];
+        const quotedMediaEntities = quotedStatus.result.legacy?.extended_entities?.media || [];
         for (const media of quotedMediaEntities) {
           if (media.type === "photo") {
             mediaUrls.push(media.media_url_https);
