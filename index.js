@@ -43,16 +43,35 @@ client.once("ready", async () => {
     ],
   });
   
-  await client.application.commands.create({
-    name: "help",
-    description: '❓| Useful info & links',
-  });
-
-  await client.application.commands.create({
-    name: "ping",
-    description: '🏓| Check the bot\'s status',
-  });
+await client.application.commands.create({
+  name: "help",
+  description: '❓| Useful info & links',
 });
+
+await client.application.commands.create({
+  name: "ping",
+  description: '🏓| Check the bot\'s status',
+});
+
+await client.application.commands.create({
+  name: "report",
+  description: '📢| Report an issue or a user',
+  options: [
+    {
+      name: 'user',
+      type: 'USER',
+      description: 'The user you want to report',
+      required: false,
+    },
+    {
+      name: 'issue',
+      type: 'STRING',
+      description: 'Describe the issue',
+      required: true,
+    },
+  ],
+});
+
 
 // when joining a new discord
 client.on(Events.GuildCreate, handleOnJoin);
