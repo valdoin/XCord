@@ -11,6 +11,7 @@ const handleMessage = require("./events/messageEvent");
 const handleOnJoin = require("./events/onJoinEvent");
 const helpCommand = require("./commands/help");
 const pingCommand = require("./commands/ping");
+const reportCommand = require("./commands/report");
 
 // Discord bot intents
 const client = new Client({
