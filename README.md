@@ -43,4 +43,4 @@ If you want to install it for personnal use (fork the project then ask for a pul
 [TERMS OF SERVICE](./TOS.md)  
 [PRIVACY POLICY](./PRIVACY%20POLICY.md)
 
-Hosted on [Cybrancee](https://cybrancee.com/). 
+Hosted on [Hetzner](https://www.hetzner.com/). 
