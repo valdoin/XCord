@@ -1,8 +1,6 @@
-const fs = require("fs");
-const tmp = require("tmp");
 const { AttachmentBuilder } = require("discord.js");
 
-const MAX_UPLOAD_SIZE = 25 * 1024 * 1024; // 25 MB
+const MAX_UPLOAD_SIZE = 25 * 1024 * 1024;
 
 async function downloadMedia(mediaUrls) {
   const uploadFiles = [];
@@ -20,11 +18,7 @@ async function downloadMedia(mediaUrls) {
       }
 
       const filename = mediaUrl.split('/').pop();
-      const tempFile = tmp.fileSync();
-      fs.writeFileSync(tempFile.name, buffer);
-      uploadFiles.push(new AttachmentBuilder(tempFile.name, { name: filename }));
-    } else {
-      console.error(`Error downloading the media: ${mediaUrl}`);
+      uploadFiles.push(new AttachmentBuilder(buffer, { name: filename }));
     }
   }
   return { uploadFiles, oversizedMediaUrls };
