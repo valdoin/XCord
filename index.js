@@ -32,7 +32,7 @@ app.listen(port, () => {
 });
 
 // on ready + setting up the available commands
-client.once("ready", async () => {
+client.once("clientReady", async () => {
   console.log(`Logged in as ${client.user.tag}`);
   client.user.setPresence({
     activities: [

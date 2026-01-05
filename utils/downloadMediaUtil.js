@@ -1,6 +1,6 @@
 const { AttachmentBuilder } = require("discord.js");
 
-const MAX_UPLOAD_SIZE = 25 * 1024 * 1024;
+const MAX_UPLOAD_SIZE = 9.5 * 1024 * 1024;
 
 async function downloadMedia(mediaUrls) {
   const uploadFiles = [];

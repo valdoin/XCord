@@ -7,3 +7,4 @@ build/
 out/
 package-lock.json
 yarn.lock
+config/proxies.js
