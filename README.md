@@ -20,22 +20,24 @@ If you want to install it for personnal use (fork the project then ask for a pul
 
 1. Clone the repository : 
     
-    	git clone https://github.com/valdoin/XCord
-    	cd xcord
+        git clone https://github.com/valdoin/XCord
+        cd xcord
 
 2. Install the dependencies : 
-    	
+        
         npm install
 
 3. Create a .env file in the root directory which contains your Discord bot token :
 
         DISCORD_TOKEN=[your_discord_token]
 
-4. Start the express server :
+4. Update `config/proxies.js` with valid proxies (residential recommended) to avoid Twitter blocking.
+
+5. Start the express server :
 
         node index.js
 
-5. Invite the bot to your Discord server then send a Twitter URL in any channel and it will fetch and display the tweet medias.
+6. Invite the bot to your Discord server then send a Twitter URL in any channel and it will fetch and display the tweet medias.
 
 ## Legal Information
  
