@@ -46,6 +46,8 @@ async function handleMessage(message) {
     }
 
     if (message.content.includes("x.com") || message.content.includes("twitter.com")) {
+        console.log(`[Link Detected] from ${message.author.tag}`);
+
         const now = Date.now();
         for (const [key, timestamp] of lastMessageTimestamps.entries()) {
             if (now - timestamp > COOLDOWN_DURATION) {
@@ -55,8 +57,7 @@ async function handleMessage(message) {
 
         const lastTimestamp = lastMessageTimestamps.get(message.author.id);
         if (lastTimestamp && now - lastTimestamp < COOLDOWN_DURATION) {
-            const remainingTime = ((COOLDOWN_DURATION - (now - lastTimestamp)) / 1000).toFixed(1);
-            await message.reply(`You are on cooldown (${remainingTime}s).`);
+            console.log(`[Cooldown] User ${message.author.tag} ignored`);
             return;
         }
 
@@ -66,6 +67,7 @@ async function handleMessage(message) {
         
         if (!tweetURL) return;
 
+        console.log(`[Processing] ${tweetURL}`);
         const tweetID = tweetURL.split('/').pop().split('?')[0];
         
         try {
@@ -73,7 +75,10 @@ async function handleMessage(message) {
             const tweetData = await response.json();
 
             const result = tweetData.data?.tweetResult?.result;
-            if (!result) return;
+            if (!result) {
+                console.log("[Error] Tweet result not found in JSON");
+                return;
+            }
 
             message.channel.sendTyping();
 
@@ -93,6 +98,8 @@ async function handleMessage(message) {
                     textWithoutLink = quotedText.split("http")[0].trim();
                 }
             }
+
+            console.log(`[Media Found] ${mediaUrls.length} videos/photos, ${gifUrls.length} gifs`);
 
             const allUploadFiles = [];
             const oversizedMediaUrls = [];
@@ -119,17 +126,25 @@ async function handleMessage(message) {
                 messagePayload.content += `**• Quoted:** "${textWithoutLink}"\n`;
             }
 
-            if (oversizedMediaUrls.length > 0) {
-                messagePayload.content += `\n**• Oversized / Links:**\n${oversizedMediaUrls.join('\n')}`;
+            if (allUploadFiles.length > 0 || oversizedMediaUrls.length > 0) {
+                messagePayload.content += `\n**• Tweet media(s):**`;
             }
 
-            if (messagePayload.content === "" && allUploadFiles.length === 0) {
+            if (oversizedMediaUrls.length > 0) {
+                messagePayload.content += `\n${oversizedMediaUrls.join('\n')}`;
+            }
+
+            if (messagePayload.content.trim() === "" && allUploadFiles.length === 0) {
+                console.log("[Skipped] Nothing to send");
                 return;
             }
+
+            console.log(`[Sending] ${allUploadFiles.length} files + content`);
 
             try {
                 await message.reply(messagePayload);
             } catch (err) {
+                console.warn(`[Reply Failed] ${err.code}, trying fallback...`);
                 if (messagePayload.content) {
                     messagePayload.content = `<@${message.author.id}> ` + messagePayload.content;
                 } else {
@@ -139,7 +154,7 @@ async function handleMessage(message) {
             }
 
         } catch (error) {
-            console.error("Handler error:", error.message);
+            console.error("[Handler Error]", error.message);
         }
     }
 }
