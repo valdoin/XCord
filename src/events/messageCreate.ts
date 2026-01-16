@@ -1,12 +1,12 @@
-const { downloadMedia } = require("../utils/downloadMediaUtil.js");
-const { convertMp4ToGif } = require("../utils/convertMp4ToGifUtil.js");
-const { PermissionsBitField } = require("discord.js");
+import { Message, PermissionsBitField, AttachmentBuilder, TextChannel } from "discord.js";
+import { downloadMedia } from "../utils/downloadMedia";
+import { convertMp4ToGif } from "../utils/convertMp4ToGif";
 
 const MAX_BITRATE = 2176000;
 const COOLDOWN_DURATION = 5000;
-const lastMessageTimestamps = new Map();
+const lastMessageTimestamps = new Map<string, number>();
 
-function extractMediaFromData(legacyData, mediaUrls, gifUrls) {
+function extractMediaFromData(legacyData: any, mediaUrls: string[], gifUrls: string[]) {
   if (!legacyData) return;
 
   const mediaEntities = legacyData.extended_entities?.media || [];
@@ -17,12 +17,12 @@ function extractMediaFromData(legacyData, mediaUrls, gifUrls) {
     } else if (media.type === "video" || media.type === "animated_gif") {
       const variants = media.video_info.variants;
       const suitableVariants = variants.filter(
-        (variant) => variant.bitrate <= MAX_BITRATE
+        (variant: any) => variant.bitrate <= MAX_BITRATE
       );
 
       if (suitableVariants.length > 0) {
         const highestBitrateVariant = suitableVariants.reduce(
-          (prev, current) => {
+          (prev: any, current: any) => {
             return prev.bitrate > current.bitrate ? prev : current;
           }
         );
@@ -41,9 +41,9 @@ function extractMediaFromData(legacyData, mediaUrls, gifUrls) {
   }
 }
 
-async function processMediaList(mediaUrls, gifUrls) {
-  const uploadFiles = [];
-  const oversizedMediaUrls = [];
+async function processMediaList(mediaUrls: string[], gifUrls: string[]) {
+  const uploadFiles: (string | AttachmentBuilder)[] = [];
+  const oversizedMediaUrls: string[] = [];
 
   if (mediaUrls.length > 0) {
     const { uploadFiles: dlFiles, oversizedMediaUrls: dlOversized } =
@@ -60,13 +60,16 @@ async function processMediaList(mediaUrls, gifUrls) {
   return { uploadFiles, oversizedMediaUrls };
 }
 
-async function handleMessage(message) {
+export default async function handleMessage(message: Message) {
   if (message.author.bot) return;
+  if (!message.guild || !message.channel.isTextBased()) return;
 
-  const botPermissions = message.channel.permissionsFor(
-    message.guild?.members.me
-  );
+  const channel = message.channel as TextChannel;
+
+  const botPermissions = channel.permissionsFor(message.guild.members.me!);
+  
   if (
+    !botPermissions ||
     !botPermissions.has([
       PermissionsBitField.Flags.SendMessages,
       PermissionsBitField.Flags.ReadMessageHistory,
@@ -109,11 +112,11 @@ async function handleMessage(message) {
     if (!tweetURL) return;
 
     console.log(`[Processing] ${tweetURL}`);
-    const tweetID = tweetURL.split("/").pop().split("?")[0];
+    const tweetID = tweetURL.split("/").pop()?.split("?")[0];
 
     try {
       const response = await fetch(`http://localhost:3000/${tweetID}`);
-      const tweetData = await response.json();
+      const tweetData = await response.json() as any;
 
       const result = tweetData.data?.tweetResult?.result;
       if (!result) {
@@ -121,13 +124,13 @@ async function handleMessage(message) {
         return;
       }
 
-      const mainMediaUrls = [];
-      const mainGifUrls = [];
+      const mainMediaUrls: string[] = [];
+      const mainGifUrls: string[] = [];
       extractMediaFromData(result.legacy, mainMediaUrls, mainGifUrls);
 
-      const quotedMediaUrls = [];
-      const quotedGifUrls = [];
-      let textWithoutLink;
+      const quotedMediaUrls: string[] = [];
+      const quotedGifUrls: string[] = [];
+      let textWithoutLink: string | undefined;
       const quotedStatus = result.quoted_status_result;
 
       if (quotedStatus) {
@@ -155,7 +158,7 @@ async function handleMessage(message) {
         return;
       }
 
-      message.channel.sendTyping();
+      await channel.sendTyping();
 
       console.log(
         `[Media Found] Main: ${mainMediaUrls.length + mainGifUrls.length
@@ -173,7 +176,7 @@ async function handleMessage(message) {
         ...quotedResult.uploadFiles,
       ];
 
-      const messagePayload = {
+      const messagePayload: any = {
         content: "",
         files: allUploadFiles,
         allowedMentions: { repliedUser: false },
@@ -238,7 +241,7 @@ async function handleMessage(message) {
 
       try {
         await message.reply(messagePayload);
-      } catch (err) {
+      } catch (err: any) {
         console.warn(`[Reply Failed] ${err.code}, trying fallback...`);
         if (messagePayload.content) {
           messagePayload.content =
@@ -246,12 +249,10 @@ async function handleMessage(message) {
         } else {
           messagePayload.content = `<@${message.author.id}>`;
         }
-        await message.channel.send(messagePayload);
+        await channel.send(messagePayload);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[Handler Error]", error.message);
     }
   }
 }
-
-module.exports = handleMessage;

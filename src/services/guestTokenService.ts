@@ -1,11 +1,11 @@
-const axios = require("axios");
-const { HttpsProxyAgent } = require("https-proxy-agent");
-const { getRandomProxy } = require("../services/proxyService");
+import axios, { AxiosRequestConfig } from "axios";
+import { HttpsProxyAgent } from "https-proxy-agent";
+import { getRandomProxy } from "./proxyService";
 
-let cachedToken = null;
+let cachedToken: string | null = null;
 let tokenExpiry = 0;
 
-async function getGuestToken() {
+export async function getGuestToken() {
   const now = Date.now();
 
   if (cachedToken && now < tokenExpiry) {
@@ -15,7 +15,7 @@ async function getGuestToken() {
   const proxy = getRandomProxy();
   const agent = new HttpsProxyAgent(proxy);
 
-  const config = {
+  const config: AxiosRequestConfig = {
     headers: {
       Authorization:
         "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
@@ -38,7 +38,6 @@ async function getGuestToken() {
   } catch (error) {
     console.error(error);
     cachedToken = null;
+    return null;
   }
 }
-
-module.exports = { getGuestToken };

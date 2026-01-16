@@ -1,16 +1,16 @@
-const axios = require("axios");
-const { HttpsProxyAgent } = require("https-proxy-agent");
-const { getGuestToken } = require("../services/guestTokenService");
-const { getRandomProxy } = require("../services/proxyService");
+import { Request, Response } from 'express';
+import axios, { AxiosRequestConfig } from 'axios'; 
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import { getGuestToken } from '../services/guestTokenService';
+import { getRandomProxy } from '../services/proxyService';
 
-async function fetchTweet(req, res) {
+export async function fetchTweet(req: Request, res: Response) {
   try {
     const tweetID = req.params.tweetID;
-    const proxy = getRandomProxy();
+    const proxy = await getRandomProxy();
     const agent = new HttpsProxyAgent(proxy);
     const guestToken = await getGuestToken();
-
-    const config = {
+    const config: AxiosRequestConfig = {
       method: "GET",
       url: "https://api.x.com/graphql/Xl5pC_lBk_gcO2ItU39DQw/TweetResultByRestId",
       params: {
@@ -63,7 +63,7 @@ async function fetchTweet(req, res) {
           "Wrdg0MrefzpjAczgX2jye33wFrdElzhi3P9+VHaFYP9UPGEAom97LFYpk7zd3wc118OvbFgMtLEjZb7qUJRMEiqpHn91WQ",
       },
       httpsAgent: agent,
-      proxy: false
+      proxy: false 
     };
 
     const response = await axios(config);
@@ -73,5 +73,3 @@ async function fetchTweet(req, res) {
     res.status(500).send({ error: "Failed to fetch tweet" });
   }
 }
-
-module.exports = { fetchTweet };

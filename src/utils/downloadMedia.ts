@@ -1,10 +1,10 @@
-const { AttachmentBuilder } = require("discord.js");
+import { AttachmentBuilder } from "discord.js";
 
 const MAX_UPLOAD_SIZE = 9.5 * 1024 * 1024;
 
-async function downloadMedia(mediaUrls) {
-  const uploadFiles = [];
-  const oversizedMediaUrls = [];
+export async function downloadMedia(mediaUrls: string[]) {
+  const uploadFiles: AttachmentBuilder[] = [];
+  const oversizedMediaUrls: string[] = [];
 
   for (const mediaUrl of mediaUrls) {
     try {
@@ -17,7 +17,7 @@ async function downloadMedia(mediaUrls) {
           oversizedMediaUrls.push(mediaUrl);
           continue;
         }
-        const filename = mediaUrl.split('/').pop().split('?')[0];
+        const filename = mediaUrl.split('/').pop()?.split('?')[0] || 'file';
         uploadFiles.push(new AttachmentBuilder(buffer, { name: filename }));
       }
     } catch (error) {
@@ -28,5 +28,3 @@ async function downloadMedia(mediaUrls) {
   
   return { uploadFiles, oversizedMediaUrls };
 }
-
-module.exports = { downloadMedia };

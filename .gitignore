@@ -5,6 +5,5 @@ node_modules/
 dist/
 build/
 out/
-package-lock.json
 yarn.lock
-config/proxies.js
+src/config/proxies.ts

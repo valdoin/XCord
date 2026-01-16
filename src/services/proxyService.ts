@@ -1,11 +1,9 @@
-const proxies = require("../config/proxies");
+import proxies from "../config/proxies";
 
 let currentIndex = 0;
 
-function getRandomProxy() {
+export function getRandomProxy(): string {
   const proxy = proxies[currentIndex];
   currentIndex = (currentIndex + 1) % proxies.length;
   return proxy;
 }
-
-module.exports = { getRandomProxy };
